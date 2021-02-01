@@ -1,0 +1,144 @@
+NODE
+====
+
+
+O que é Node?
+    Plataforma que utiliza da V8 (Engine do Google Chrome) no lado do backend.
+    Permite tratar requisições com JS e acessar DBs.
+
+Criando o arquivo package.json para guardar as versões das pendências utilizadas
+    npm init -y
+
+Instalar EXPRESS para lidar com rotas e views
+    npm install express
+
+Executar o programa a cada atualização
+    node server.js      // nome do arquivo
+
+Para executar atualizando o código no servidor automaticamente:
+    Precisamos instalar a dependência nodemon como desenvolvimento (-D)
+        npm install -D nodemon
+    Dentro do package.json inserir o script:
+        "dev": "nodemon server.js"
+        Ficando assim:
+            "scripts": {
+                "test": "echo \"Error: no test specified\" && exit 1",
+                "dev": "nodemon server.js"
+            },
+
+Criamos src/index.js:
+    const express = require('express');
+
+    const app = express();
+
+    app.get('/', (request, response) => {
+    return response.send('Hello');
+    });
+
+    app.listen(3333, () => {
+        console.log('Backend server started!');
+    });
+
+    Declaramos o uso do express
+    Criamos uma variável objeto do express
+    Configuramos a porta que será "ouvida" pelo Node. Podemos passar uma função retornando alguma mensagem como acima (opcional)
+    Configuramos a rota get que recebe dois parâmetros e retorna algo:
+        A primeira é a rota
+        A segunda é uma função que recebe dois parâmetros:
+            Requisição (request)
+            Resposta (response)
+
+            O retorno será com return response ... podendo ser arquivo, texto, json, etc
+
+Para executar os scripts temos algumas formas:
+    npm run
+    Para executar o script dev:
+        npm run dev
+    
+    Em package.json:
+        Incluímos "dev": "nodemon server.js" em scripts e deixamos "main": "index.js"
+        OU
+        "dev": "nodemon" e deixamos "main": "src/index.js". Com isso subimos o servidor:
+            npm run dev
+            OU
+            yarn dev
+
+
+*******************************************************************
+* OBS: UTILIZANDO INSOMNIA PARA TESTES DE REQUISIÇÕES E RESPOSTAS *
+*******************************************************************
+
+Acrescentando rotas:
+Em - src/index.js:
+    app.get('/projects', (request, response) => {
+    projetos = [
+        'Projeto 1',
+        'Projeto 2',
+        'Projeto 3',
+    ]
+    return response.json(projetos);
+    });
+
+    app.put('/projects/:id', (request, response) => {
+    const params = request.params;  // http://localhost:3333/projects/2
+    const query_params = request.query; // http://localhost:3333/projects/2?title=React&owner=Amauri
+    const {title, owner} = request.query;   // desestruturando
+
+    console.log(params);
+    console.log(query_params);
+    console.log(title);
+    console.log(owner);
+
+    projetos = [
+        'Projeto 5',
+        'Projeto 2',
+        'Projeto 3',
+    ]
+    return response.json(projetos);
+    });
+
+const app = express();
+No caso de um post com body, precisamos acrescentar:
+    app.use(express.json()); logo abaixo de const app = express(); antes das rotas:
+    const app = express();
+    app.use(express.json());
+
+
+    Recuperando os dados de body:
+
+    app.post('/projects', (request, response) => {
+    const body = request.body;
+    console.log(body);
+
+    const { title, owner } = request.body;
+    console.log(title);
+    console.log(owner);
+
+    projetos = [
+        'Projeto 1',
+        'Projeto 2',
+        'Projeto 3',
+    ]
+    return response.json(projetos);
+    });
+
+    
+
+MONGO COM DOCKER
+    docker pull mongo
+    docker run --name mongodb -p 27017:27017 -d mongo
+    Acessar via browser, não dando mensagem de erro está funcionando o container:
+        localhost:27017
+    Instalando dependência para ORM do mongodb:
+        npm install mongoose
+    Instalando dependência para paginação:
+        npm install mongoose-paginate
+    Instalando require-dir para não precisar fazer require em todos os models
+        npm install require-dir
+
+Para não precisar colocar require para registrar cada model, instale a dependência:
+    npm install require-dir
+
+Para ter acesso externo, fora da mesma rede:
+    Instale o CORS:
+        npm install cors
