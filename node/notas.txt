@@ -122,7 +122,134 @@ No caso de um post com body, precisamos acrescentar:
     return response.json(projetos);
     });
 
-    
+
+
+Armazenando e utilizando dados da Requisição
+============================================
+
+Para gerarmos um id aleatório, vamos instalar o uuid:
+    yarn add uuidv4
+
+- Em src/index.js:
+    Importamos uuid:
+        const { uuid } = require('uuidv4');
+
+    Criamos o array antes das rotas:
+        const projects = [];
+
+    Alterando dados:
+    app.put('/projects/:id', (request, response) => {
+        const { id } = request.params;
+        const { title, owner } = request.body;
+        const projectIndex = projects.findIndex(project => project.id === id);
+        if (projectIndex < 0) {
+            return response.status(400).json({ error: 'Project not found' });
+        }
+        const project = { id, title, owner }
+        projects[projectIndex] = project;
+        return response.json(project);
+    });
+
+    Pegamos os dados de params e body
+    Pegamos o índice do projeto em projects
+    Verificamos se o projeto existe. Caso não encontre será retornado -1.
+    Criamos o objeto projeto 
+    Alteramos os dados anteriores do projeto pelos recebidos em body
+    Retornamos sempre o projeto criado/alterado com o status code correspondente
+
+
+
+    Deletando um projeto:
+    app.delete('/projects/:id', (request, response) => {
+        const { id } = request.params;
+        const projectIndex = projects.findIndex(project => project.id === id);
+        if (projectIndex < 0) {
+            return response.status(400).json({ error: 'Project not found' });
+        }
+        projects.splice(projectIndex, 1);
+        return response.status(204).send();
+    });
+
+    splice deleta e devolve o objeto
+
+
+
+    Filtrando os projetos:
+    app.get('/projects', (request, response) => {
+        const {title} = request.query;
+        const results = title
+        ? projects.filter(project => project.title.includes(title))
+        : projects;
+        return response.json(results);
+    });
+
+
+    Pegamos o title em request.query 
+    Verificamos se existe o title
+        Se sim, filtramos os projetos
+        Se não, retornamos todos os projetos
+
+
+
+MIDDLEWARES
+===========
+
+Interceptador de requisições que pode interromper totalmente ou alterar dados da requisição.
+Usado quando desejamos que em algum trecho do código seja disparado de forma automática em uma ou mais rotas da aplicação.
+
+Podemos criar um middleware nesse formato:
+    function logRequests(request, response, next) {
+    const {method, url} = request;
+    const logLabel = `[${method.toUpperCase()}] ${url}`;
+    console.log(logLabel);
+    return next();
+    }
+
+    app.use(logRequests);
+
+    Se não colocarmos o next() a requisição será interrompida e ficará em loop.
+
+
+Agora podemos colocar o middleware somente para essa função, comentando o app.use(logRequests);
+    app.get('/projects', logRequests, (request, response) => {
+        const {title} = request.query;
+        const results = title
+        ? projects.filter(project => project.title.includes(title))
+        : projects;
+        return response.json(results);
+    });
+
+
+Se colocarmos um código abaixo do next() será executado outro middleware primeiro:
+    function logRequests(request, response, next) {
+        const {method, url} = request;
+        const logLabel = `[${method.toUpperCase()}] ${url}`;
+        console.time(logLabel);
+        next();
+        console.timeEnd(logLabel);
+    }
+
+    app.use(logRequests);
+
+    app.get('/', (request, response) => {
+    return response.send('Hello');
+    });
+
+    console.time e console.timeEnd servem para medir o tempo de um console.log até outro.
+    Nesse caso a rota get será executada antes de console.timeEnd(logLabel), isso porque ele executa primeiro o next() para depois voltar ao logRequests.
+
+
+Vamos criar um middleware para validação do id:
+    function validateProjectId(request, response, next) {
+        const {id} = request.params;
+        if(!isUuid(id)) {
+            return response.status(400).json({error: "Invalid project ID"})
+        }
+        return next();
+    }
+
+    Verificamos, no middleware validateProjectId, se o id passado não é um uuid válido e retornamos um erro, interrompendo a requisição. Se for válido será executado o próximo middleware.
+
 
 MONGO COM DOCKER
     docker pull mongo
