@@ -1,0 +1,181 @@
+- Instalar Typescript:
+    yarn add typescript -D
+
+- Instalar Express:
+    yarn add express
+
+- Precisamos criar um arquivo tsconfig.json.
+    yarn tsc --init
+  
+    Agora ele já converte os arquivos Typescript em Javascript.
+  
+  Configurar tsconfig.json para deixar os arquivos convertidos dentro de uma pasta separada:
+  Descomentar "outDir": "./" e colocar o nome da pasta:
+    "outDir": "./dist",
+  
+  Essa pasta dist seguirá o mesmo padrão de src. Se criarmos uma pasta dentro de src, será criada também em dist e assim por diante.
+
+- Vamos criar src/index.ts como exemplo:
+    import express from 'express';
+
+    const app = express();
+
+    app.get('/', (request, response) => {
+      return response.json({ mesage: 'Hello World' });
+    }
+    );
+
+    app.listen(3333);
+
+  
+OBS: Sempre que instalar uma ferramenta e que no import fique com três pontinhos (...) é sinal que devemos instalar o pacote para que tenha o autocomplete. Sintaxe: yarn add @types/NOME_DO_PACOTE.
+- Instalar a tipagem do Express:
+    yarn add @types/express -D
+
+- Executar o projeto com Typescript:
+    yarn tsc
+
+    Dessa forma, criará a pasta dist com o arquivo index.js
+
+  Podemos executar o Node agora:
+    node src/index.js
+
+- Acessando no navegador:
+    http://localhost:3333/
+
+
+Agora vamos estudar Typescript criando routes/routes.ts e alterando src/index.ts:
+
+- Em routes/routes.ts:
+    import { Request, Response } from 'express';
+
+    export function helloworld(request: Request, response: Response) {
+      return response.json({ mesage: 'Hello World' });
+    }
+  
+  Criamos a função helloworld com (request, response) que estavam em src/index.ts.
+  Como não estamos usando nenhuma rota como get, não adianta importarmos o Express.
+  Precisamos então informar a tipagem importando do express os tipos Request e Response e declarando nos parâmetros da função.
+
+- Em src/index.ts:
+    import express from 'express';
+    import { helloworld } from './routes/routes';
+
+
+    const app = express();
+
+    app.get('/', helloworld);
+
+    app.listen(3333);
+
+  Importamos a função helloworld e a colocamos no lugar de (request, response).
+
+
+Interface
+=========
+
+Vamos criar services/CreateUser.ts para criarmos um usuário dentro da função helloworld.
+- Em services/CreateUser.ts:
+    export default function createUser(name, email, password) {
+      const user = {
+        name,
+        email,
+        password,
+      }
+
+      return user;
+    }
+  
+  Percebemos que o VSCode já reclama dos parâmetros porque estão sem tipagem. Temos algumas formas de passarmos isso mas a melhor é criarmos uma interface.
+    interface CreateUserData {
+      name?: string;
+      email: string;
+      password: string;
+    }
+
+    name? significa que o nome será opcional.
+
+  Agora nos parâmetros de helloworld podemos passar dessa forma, ficando o arquivo assim:
+    interface CreateUserData {
+      name?: string;
+      email: string;
+      password: string;
+    }
+
+    export default function createUser({name, email, password}: CreateUserData) {
+      const user = {
+        name,
+        email,
+        password,
+      }
+
+      return user;
+    }
+
+- Em src/routes/routes.ts:
+    import { Request, Response } from 'express';
+    import createUser from '../services/CreateUser';
+
+    export function helloworld(request: Request, response: Response) {
+      const user = createUser({
+        email: 'amauri@gmail.com',
+        password: '123456',
+      })
+
+      return response.json(user);
+    }
+
+OBS: Para incluir somente o tipo string na interface:
+techs: string[];
+
+OBS: Para incluir mais de um tipo:
+techs: Array<string | number>;
+
+
+Agora vamos incluir um array e um objeto dentro dele nos dados do usuário.
+- Em src/services/CreateUser.ts:
+    interface TechObject {
+      title: string;
+      experience: number;
+    }
+
+    interface CreateUserData {
+      name?: string;
+      email: string;
+      password: string;
+      techs?: Array<string | TechObject>;
+    }
+
+    export default function createUser({name, email, password, techs}: CreateUserData) {
+      const user = {
+        name,
+        email,
+        password,
+        techs,
+      }
+
+      return user;
+    }
+
+- Em src/routes/routes.ts:
+    import { Request, Response } from 'express';
+    import createUser from '../services/CreateUser';
+
+    export function helloworld(request: Request, response: Response) {
+      const user = createUser({
+        email: 'amauri@gmail.com',
+        password: '123456',
+        techs: [
+          'NodeJS',
+          'ReactJS',
+          'Typescript',
+          { title: 'Javascript', experience: 100 }
+        ]
+      })
+
+      return response.json(user);
+    }
+
+Para saber mais:
+Acessando o arquivo Typescript.pdf nesta pasta.
+https://www.notion.so/Typescript-5712aeab312d44fcba0aa88895caad36
